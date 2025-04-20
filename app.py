@@ -10,8 +10,14 @@ url = st.text_input("Paste the event link here:")
 if st.button("Scrape Event Information"):
     if url:
         try:
-            response = requests.get(url, timeout=10)
-            response.raise_for_status()  # check if the page loads correctly
+            # Pretend to be a browser
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/58.0.3029.110 Safari/537.3"
+            }
+            response = requests.get(url, headers=headers, timeout=10)
+            response.raise_for_status()  # Check if the page loads correctly
             soup = BeautifulSoup(response.text, 'html.parser')
 
             # Try to find all fields safely
@@ -70,4 +76,5 @@ if st.button("Scrape Event Information"):
 
     else:
         st.warning("Please enter a URL.")
+
 

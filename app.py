@@ -20,22 +20,27 @@ if st.button("Scrape Event Information"):
             response.raise_for_status()  # Check if the page loads correctly
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # Try to find all fields safely
-            title_tag = soup.find('h1', class_='event-title')
+            # Scrape Title (updated to be more flexible)
+            title_tag = soup.find('h1')  # Just find first h1, no class needed
             title = title_tag.get_text(strip=True) if title_tag else '❌ Title not found'
 
+            # Scrape Date
             date_tag = soup.find('div', class_='event-datetime')
             date = date_tag.get_text(strip=True) if date_tag else '❌ Date not found'
 
+            # Scrape Place
             place_tag = soup.find('div', class_='event-location')
             place = place_tag.get_text(strip=True) if place_tag else '❌ Place not found'
 
+            # Scrape Registration Link
             registration_tag = soup.find('a', class_='event-register-button')
             registration_link = urljoin(url, registration_tag['href']) if registration_tag else None
 
+            # Scrape Description
             description_tag = soup.find('div', class_='event-description')
             description = description_tag.get_text(strip=True) if description_tag else '❌ Description not found'
 
+            # Scrape Participants (Speakers / Panelists)
             participants = []
             speakers_section = soup.find('section', class_='event-speakers')
             if speakers_section:
@@ -47,7 +52,7 @@ if st.button("Scrape Event Information"):
             else:
                 participants = ["❌ No participants found"]
 
-            # Display the information clearly
+            # Display the information cleanly
             st.subheader("Event Title")
             st.write(title)
 
@@ -76,5 +81,6 @@ if st.button("Scrape Event Information"):
 
     else:
         st.warning("Please enter a URL.")
+
 
 

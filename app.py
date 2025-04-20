@@ -67,7 +67,45 @@ if st.button("Scrape Event Information"):
                     break  # Stop after finding first matching section
 
             if not participants:
-                participants =
+                participants = ["❌ No participants found"]
+
+            # Smarter Description detection
+            description_tag = (
+                soup.find('div', class_='event-description') or
+                soup.find('div', class_='description') or
+                soup.find('section', class_='event-description')
+            )
+            description = description_tag.get_text(strip=True) if description_tag else '❌ Description not found'
+
+            # Display the scraped information
+            st.subheader("Event Title")
+            st.write(title)
+
+            st.subheader("Date")
+            st.write(date)
+
+            st.subheader("Place")
+            st.write(place)
+
+            st.subheader("Registration Link")
+            if registration_link:
+                st.markdown(f"[Click here to register]({registration_link})")
+            else:
+                st.write("❌ Registration link not found")
+
+            st.subheader("Participants")
+            for participant in participants:
+                st.write(f"- {participant}")
+
+            st.subheader("Description")
+            st.write(description)
+
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+
+    else:
+        st.warning("Please enter a URL.")
+
 
 
 

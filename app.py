@@ -17,70 +17,58 @@ if st.button("Scrape Event Information"):
                               "Chrome/58.0.3029.110 Safari/537.3"
             }
             response = requests.get(url, headers=headers, timeout=10)
-            response.raise_for_status()  # Check if the page loads correctly
+            response.raise_for_status()
             soup = BeautifulSoup(response.text, 'html.parser')
 
-            # Scrape Title (updated to be more flexible)
-            title_tag = soup.find('h1')  # Just find first h1, no class needed
+            # Smarter Title detection
+            title_tag = soup.find('h1')
             title = title_tag.get_text(strip=True) if title_tag else '❌ Title not found'
 
-            # Scrape Date
-            date_tag = soup.find('div', class_='event-datetime')
+            # Smarter Date detection
+            date_tag = (
+                soup.find('div', class_='event-datetime') or
+                soup.find('div', class_='event-date') or
+                soup.find('div', class_='date') or
+                soup.find('div', class_='event-time')
+            )
             date = date_tag.get_text(strip=True) if date_tag else '❌ Date not found'
 
-            # Scrape Place
-            place_tag = soup.find('div', class_='event-location')
+            # Smarter Place detection
+            place_tag = (
+                soup.find('div', class_='event-location') or
+                soup.find('div', class_='event-place') or
+                soup.find('div', class_='location') or
+                soup.find('div', class_='venue')
+            )
             place = place_tag.get_text(strip=True) if place_tag else '❌ Place not found'
 
-            # Scrape Registration Link
-            registration_tag = soup.find('a', class_='event-register-button')
+            # Smarter Registration link detection
+            registration_tag = (
+                soup.find('a', class_='event-register-button') or
+                soup.find('a', class_='register-button') or
+                soup.find('a', class_='registration-link') or
+                soup.find('a', class_='signup')
+            )
             registration_link = urljoin(url, registration_tag['href']) if registration_tag else None
 
-            # Scrape Description
-            description_tag = soup.find('div', class_='event-description')
-            description = description_tag.get_text(strip=True) if description_tag else '❌ Description not found'
-
-            # Scrape Participants (Speakers / Panelists)
+            # Smarter Participants detection
             participants = []
-            speakers_section = soup.find('section', class_='event-speakers')
-            if speakers_section:
-                speaker_names = speakers_section.find_all('div', class_='speaker-name')
-                speaker_titles = speakers_section.find_all('div', class_='speaker-title')
-                for name, role in zip(speaker_names, speaker_titles):
-                    participant_entry = f"{name.get_text(strip=True)} ({role.get_text(strip=True)})"
-                    participants.append(participant_entry)
-            else:
-                participants = ["❌ No participants found"]
+            speaker_section_titles = ["Speakers", "Panelists", "Keynote Speakers", "Moderators", "Panellists"]
 
-            # Display the information cleanly
-            st.subheader("Event Title")
-            st.write(title)
+            for section_title in speaker_section_titles:
+                # Try to find any section containing the keyword
+                section = soup.find(lambda tag: tag.name in ["section", "div"] and section_title.lower() in tag.text.lower())
+                if section:
+                    names = section.find_all('div', class_='speaker-name')
+                    roles = section.find_all('div', class_='speaker-title')
+                    for name, role in zip(names, roles):
+                        participant_entry = f"{name.get_text(strip=True)} ({role.get_text(strip=True)})"
+                        participants.append(participant_entry)
+                    break  # Stop after finding first matching section
 
-            st.subheader("Date")
-            st.write(date)
+            if not participants:
+                participants =
 
-            st.subheader("Place")
-            st.write(place)
-
-            if registration_link:
-                st.subheader("Registration Link")
-                st.markdown(f"[Click here to register]({registration_link})")
-            else:
-                st.subheader("Registration Link")
-                st.write("❌ Registration link not found")
-
-            st.subheader("Participants")
-            for participant in participants:
-                st.write(f"- {participant}")
-
-            st.subheader("Description")
-            st.write(description)
-
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
-
-    else:
-        st.warning("Please enter a URL.")
 
 
 
